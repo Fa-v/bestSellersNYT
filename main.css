@@ -14,6 +14,7 @@ body {
 .container {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-evenly;
   margin: 1em;
 }
 
@@ -34,6 +35,17 @@ body {
   border-bottom: 3px solid #073642;
 }
 
+.listCard {
+  display: inherit;
+  flex-direction: column;
+  justify-content: space-between;
+  color: white;
+  margin: 0.5em;
+  padding: 8px 8px 16px 16px;
+  border-bottom: 3px solid #073642;
+  width: 300px;
+}
+
 @media screen and (min-width: 780px) {
   .card {
     display: flex;
@@ -41,9 +53,14 @@ body {
     min-width: 400px;
     border-bottom: none;
   }
+
+  .listCard {
+    width: 200px;
+  }
 }
 
-.card:hover {
+.card:hover,
+.listCard:hover {
   cursor: pointer;
   background: #073642;
 }
@@ -69,6 +86,7 @@ body {
   background: #ff6f00;
   color: #fff;
   padding: 8px;
+  align-self: flex-end;
 }
 
 .linkBtn:hover {

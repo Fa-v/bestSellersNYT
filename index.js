@@ -4,14 +4,18 @@
    * @this Window
    */
   const books = {};
-  const url = `https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json?api-key=${API_KEY}`;
+  const baseUrl = `https://api.nytimes.com/svc/books/v3/lists/`;
+  const hCFiction = `current/hardcover-fiction.json?api-key=${API_KEY}`;
+  const lists = `names.json?api-key=${API_KEY}`;
+  const hCFictionUrl = `${baseUrl}${hCFiction}`;
+  const bSListUrl = `${baseUrl}${lists}`;
   const container = document.querySelector('.container');
   const spinner = document.querySelector('.pageLoader');
   const footer = document.querySelector('.footer');
-  const localData = localStorage.getItem('booksData');
+  const localData = sessionStorage.getItem('booksData');
 
   /**
-   * Fetch a list of best sellers from the NYT API, in the first request sets the data in the local storage
+   * Fetch a list of best sellers from the NYT API, in the first request sets the data in the session storage
    * @param {String} url from the NYT
    * @this books
    * @returns {Object} the response for the ajax request
@@ -25,9 +29,18 @@
         return response.json();
       })
       .then(function(data) {
-        const booksData = data.results.books;
-        localStorage.setItem('booksData', JSON.stringify(booksData));
-        books.handleResponse(booksData);
+        if (data.results.books) {
+          const booksData = data.results.books;
+          sessionStorage.setItem('booksData', JSON.stringify(booksData));
+          books.renderBestSellers(booksData);
+        } else {
+          const booksListData = data.results;
+          sessionStorage.setItem(
+            'booksListData',
+            JSON.stringify(booksListData)
+          );
+          books.renderList(booksListData);
+        }
       })
       .catch(function(error) {
         books.handleError(error);
@@ -54,7 +67,7 @@
   };
 
   /**
-   * Parses data from local storage
+   * Parses data from session storage
    * @param {Object} books list of best seller
    * @this books
    * @returns {Void}
@@ -67,11 +80,42 @@
 
   /**
    * Extracts the necessary values to be painted in the DOM
+   * @param {Object} list list of best seller
+   * @this books
+   * @returns {String} html template
+   */
+  books.renderList = function(booksListData) {
+    spinner.removeAttribute('class');
+    footer.style.display = 'flex';
+
+    return booksListData.map(function(list) {
+      const card = document.createElement('div');
+      card.setAttribute('class', 'listCard');
+
+      const template = `
+      <div>
+        <h3>${list.list_name}</h3>
+        <p>Oldest: ${list.oldest_published_date}</p>
+        <p>Newest: ${list.newest_published_date}</p>
+        <p>Updated: ${list.updated}</p>
+        </div>
+        <div>
+          <a class="linkBtn" href=${''} target="blank">Read more</a>
+        </div>
+    `;
+
+      card.insertAdjacentHTML('afterbegin', template);
+      container.append(card);
+    });
+  };
+
+  /**
+   * Extracts the necessary values to be painted in the DOM
    * @param {Object} books list of best seller
    * @this books
    * @returns {String} html template
    */
-  books.handleResponse = function(booksData) {
+  books.renderBestSellers = function(booksData) {
     spinner.removeAttribute('class');
     footer.style.display = 'flex';
 
@@ -119,7 +163,7 @@
   books.isLoading = function() {
     spinner.setAttribute('class', 'loader');
 
-    !localData ? books.getBooksList(url) : books.getLocalData(localData);
+    !localData ? books.getBooksList(bSListUrl) : books.getLocalData(localData);
   };
 
   books.isLoading();
