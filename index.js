@@ -5,9 +5,7 @@
    */
   const books = {};
   const baseUrl = `https://api.nytimes.com/svc/books/v3/lists/`;
-  const hCFiction = `current/hardcover-fiction.json?api-key=${API_KEY}`;
   const lists = `names.json?api-key=${API_KEY}`;
-  const hCFictionUrl = `${baseUrl}${hCFiction}`;
   const bSListUrl = `${baseUrl}${lists}`;
   const container = document.querySelector('.container');
   const spinner = document.querySelector('.pageLoader');
@@ -20,7 +18,7 @@
    * @this books
    * @returns {Object} the response for the ajax request
    */
-  books.getBooksList = function(url) {
+  books.getBooksData = function(url) {
     fetch(url)
       .then(function(response) {
         if (!response.ok) {
@@ -31,15 +29,15 @@
       .then(function(data) {
         if (data.results.books) {
           const booksData = data.results.books;
-          sessionStorage.setItem('booksData', JSON.stringify(booksData));
+          /* sessionStorage.setItem('booksData', JSON.stringify(booksData)); */
           books.renderBestSellers(booksData);
         } else {
           const booksListData = data.results;
-          sessionStorage.setItem(
+          /* sessionStorage.setItem(
             'booksListData',
             JSON.stringify(booksListData)
-          );
-          books.renderList(booksListData);
+          ); */
+          books.renderLists(booksListData);
         }
       })
       .catch(function(error) {
@@ -72,11 +70,11 @@
    * @this books
    * @returns {Void}
    */
-  books.getLocalData = function(booksData) {
+  /*  books.getLocalData = function(booksData) {
     spinner.removeAttribute('class');
     let parsedData = JSON.parse(booksData);
     books.handleResponse(parsedData);
-  };
+  }; */
 
   /**
    * Extracts the necessary values to be painted in the DOM
@@ -84,11 +82,11 @@
    * @this books
    * @returns {String} html template
    */
-  books.renderList = function(booksListData) {
+  books.renderLists = function(booksListData) {
     spinner.removeAttribute('class');
     footer.style.display = 'flex';
 
-    return booksListData.map(function(list) {
+    booksListData.map(function(list) {
       const card = document.createElement('div');
       card.setAttribute('class', 'listCard');
 
@@ -99,13 +97,32 @@
         <p>Newest: ${list.newest_published_date}</p>
         <p>Updated: ${list.updated}</p>
         </div>
-        <div>
-          <a class="linkBtn" href=${''} target="blank">Read more</a>
+        <div class="readMoreBtn" data-id=${list.list_name_encoded}>
+          Read more
         </div>
-    `;
+        `;
 
       card.insertAdjacentHTML('afterbegin', template);
       container.append(card);
+    });
+    books.getList();
+  };
+
+  /**
+   * Adds a click event to buttons and calls the isLoading function
+   * @this books
+   * @returns {Void}
+   */
+  books.getList = function() {
+    container.addEventListener('click', function(event) {
+      const selectedList = event.target.dataset.id;
+      const selectedDiv = event.target.nodeName === 'DIV';
+
+      if (selectedDiv && selectedList) {
+        const listUrl = `current/${selectedList}.json?api-key=${API_KEY}`;
+        const composedUrl = `${baseUrl}${listUrl}`;
+        books.isLoading(composedUrl);
+      }
     });
   };
 
@@ -160,12 +177,19 @@
    * @this books
    * @returns {Void}
    */
-  books.isLoading = function() {
+  books.isLoading = function(url) {
     spinner.setAttribute('class', 'loader');
+    footer.style.display = 'none';
+    container.innerHTML = '';
 
-    !localData ? books.getBooksList(bSListUrl) : books.getLocalData(localData);
+    books.getBooksData(url);
+    /* !localData ? books.getBooksData(bSListUrl) : books.getLocalData(localData); */
   };
 
-  books.isLoading();
+  books.init = function() {
+    books.isLoading(bSListUrl);
+  };
+
+  books.init();
   return books;
 })();

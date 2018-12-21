@@ -26,6 +26,7 @@ body {
 
 .card {
   display: inherit;
+  flex-direction: column;
   align-content: center;
   flex: 1;
   background: #15414c;
@@ -46,19 +47,6 @@ body {
   width: 300px;
 }
 
-@media screen and (min-width: 780px) {
-  .card {
-    display: flex;
-    flex-flow: row nowrap;
-    min-width: 400px;
-    border-bottom: none;
-  }
-
-  .listCard {
-    width: 200px;
-  }
-}
-
 .card:hover,
 .listCard:hover {
   cursor: pointer;
@@ -70,28 +58,48 @@ body {
 }
 
 .coverImg {
-  width: auto;
-  height: 200px;
-  margin: 1.3em 1em 0 0;
+  width: 300px;
+  height: auto;
+  margin-top: 1.3em;
 }
 
 .description {
   align-self: flex-start;
 }
 
-.linkBtn {
+.linkBtn,
+.readMoreBtn {
   text-decoration: none;
   text-align: center;
   font-weight: 700;
   background: #ff6f00;
   color: #fff;
   padding: 8px;
-  align-self: flex-end;
+  align-self: flex-start;
 }
 
 .linkBtn:hover {
   background: #fff;
   color: #ff6f00;
+}
+
+@media screen and (min-width: 780px) {
+  .card {
+    display: flex;
+    flex-flow: row nowrap;
+    min-width: 400px;
+    border-bottom: none;
+  }
+
+  .listCard {
+    width: 200px;
+  }
+
+  .coverImg {
+    width: auto;
+    height: 200px;
+    margin: 1.3em 1em 0 0;
+  }
 }
 
 /*loader animation*/
