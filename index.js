@@ -6,54 +6,67 @@
   const books = {};
   const baseUrl = `https://api.nytimes.com/svc/books/v3/lists/`;
   const lists = `names.json?api-key=${API_KEY}`;
-  const bSListUrl = `${baseUrl}${lists}`;
+  const bestSellersListUrl = `${baseUrl}${lists}`;
+  const header = document.querySelector('.header');
   const container = document.querySelector('.container');
   const spinner = document.querySelector('.pageLoader');
   const footer = document.querySelector('.footer');
+  const goBackBtn = document.createElement('button');
+  const listName = document.createElement('h2');
   const localData = sessionStorage.getItem('booksData');
 
   /**
-   * Fetch a list of best sellers from the NYT API, in the first request sets the data in the session storage
+   * getBestSellersListData - Fetches a list of best sellers from the NYT API.
+   * In the first request, it sets the data in session storage
    * @param {String} url from the NYT
    * @this books
-   * @returns {Object} the response for the ajax request
+   * @returns {void}
    */
-  books.getBooksData = function(url) {
+  books.getBestSellersListData = function(url) {
+    books.showLoading();
+
     fetch(url)
-      .then(function(response) {
-        if (!response.ok) {
-          books.handleError(response.status);
-        }
-        return response.json();
-      })
-      .then(function(data) {
-        if (data.results.books) {
-          const booksData = data.results.books;
-          /* sessionStorage.setItem('booksData', JSON.stringify(booksData)); */
-          books.renderBestSellers(booksData);
-        } else {
-          const booksListData = data.results;
-          /* sessionStorage.setItem(
+      .then(response => response.json())
+      .then(data => {
+        const { results: booksListData } = data;
+        /* sessionStorage.setItem(
             'booksListData',
             JSON.stringify(booksListData)
           ); */
-          books.renderLists(booksListData);
-        }
+        books.renderLists(booksListData);
       })
-      .catch(function(error) {
-        books.handleError(error);
-      });
+      .catch(error => books.handleError(error));
   };
 
   /**
-   * If an error occurs, show message informing about the error
+   * getListDetail - Fetches the list detail for the selected category.
+   * In the first request, it sets the data in session storage
+   * @param {String} url from the NYT
+   * @this books
+   * @returns {void}
+   */
+  books.getListDetail = function(url) {
+    books.showLoading();
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const { results: booksData } = data;
+        /* sessionStorage.setItem('booksData', JSON.stringify(booksData)); */
+        books.renderBestSellers(booksData);
+      })
+      .catch(error => books.handleError(error));
+  };
+
+  /**
+   * handleError - If an error occurs, show message informing about the error
    * @param {String} error message
    * @this books
    * @returns {String} html template
    */
   books.handleError = function(error) {
-    spinner.removeAttribute('class');
-    /* throw new Error('Error status = ', error); */
+    books.removeLoading();
+
     const template = `
       <div class="error">
         <h1>Sorry it has been an error, try later</h1>
@@ -83,8 +96,9 @@
    * @returns {String} html template
    */
   books.renderLists = function(booksListData) {
-    spinner.removeAttribute('class');
-    footer.style.display = 'flex';
+    books.removeLoading();
+    goBackBtn.style.display = 'none';
+    listName.style.display = 'none';
 
     booksListData.map(function(list) {
       const card = document.createElement('div');
@@ -105,25 +119,6 @@
       card.insertAdjacentHTML('afterbegin', template);
       container.append(card);
     });
-    books.getList();
-  };
-
-  /**
-   * Adds a click event to buttons and calls the isLoading function
-   * @this books
-   * @returns {Void}
-   */
-  books.getList = function() {
-    container.addEventListener('click', function(event) {
-      const selectedList = event.target.dataset.id;
-      const selectedDiv = event.target.nodeName === 'DIV';
-
-      if (selectedDiv && selectedList) {
-        const listUrl = `current/${selectedList}.json?api-key=${API_KEY}`;
-        const composedUrl = `${baseUrl}${listUrl}`;
-        books.isLoading(composedUrl);
-      }
-    });
   };
 
   /**
@@ -133,24 +128,18 @@
    * @returns {String} html template
    */
   books.renderBestSellers = function(booksData) {
-    spinner.removeAttribute('class');
-    footer.style.display = 'flex';
+    books.removeLoading();
 
-    return booksData.map(function(book) {
+    listName.setAttribute('class', 'subtitle');
+    listName.style.display = 'block';
+    listName.innerText = booksData.list_name;
+
+    header.append(listName);
+    goBackBtn.style.display = 'block';
+
+    booksData.books.map(function(book) {
       const card = document.createElement('div');
       card.setAttribute('class', 'card');
-
-      bookInfo = {
-        title: book.title,
-        description: book.description,
-        imgSrc: book.book_image,
-        height: book.book_image_height,
-        width: book.book_image_width,
-        buyLink: book.amazon_product_url,
-        weeksOnLIst: book.weeks_on_list,
-        rank: book.rank,
-        rankLastWeek: book.rank_last_week
-      };
 
       const template = `
       <img class="coverImg" src=${book.book_image} alt="${book.title}"/>
@@ -169,6 +158,14 @@
     });
   };
 
+  books.setUpBackButton = function() {
+    goBackBtn.setAttribute('class', 'backBtn');
+    goBackBtn.innerText = 'Back to lists';
+    goBackBtn.style.display = 'none';
+
+    header.append(goBackBtn);
+  };
+
   /**
    * Shows an animation until the ajax request is completed and checks if data has been set locally
    * @callback books.getBookList
@@ -177,19 +174,52 @@
    * @this books
    * @returns {Void}
    */
-  books.isLoading = function(url) {
+  books.showLoading = function() {
     spinner.setAttribute('class', 'loader');
     footer.style.display = 'none';
     container.innerHTML = '';
+  };
 
-    books.getBooksData(url);
-    /* !localData ? books.getBooksData(bSListUrl) : books.getLocalData(localData); */
+  books.removeLoading = function() {
+    spinner.removeAttribute('class');
+    footer.style.display = 'flex';
+  };
+
+  books.createGoBackButtonEventListener = function() {
+    const onClickGoBackBtn = function() {
+      books.getBestSellersListData(bestSellersListUrl);
+    };
+
+    goBackBtn.addEventListener('click', onClickGoBackBtn);
+  };
+
+  books.createListDetailEventListener = function() {
+    const onClickDetail = function(event) {
+      const selectedList = event.target.dataset.id;
+      const selectedDiv = event.target.nodeName === 'DIV';
+
+      if (selectedDiv && selectedList) {
+        const listUrl = `current/${selectedList}.json?api-key=${API_KEY}`;
+        const composedUrl = `${baseUrl}${listUrl}`;
+        books.getListDetail(composedUrl);
+      }
+    };
+
+    container.addEventListener('click', onClickDetail);
+  };
+
+  books.setUpEventListeners = function() {
+    books.createGoBackButtonEventListener();
+    books.createListDetailEventListener();
   };
 
   books.init = function() {
-    books.isLoading(bSListUrl);
+    books.setUpBackButton();
+    books.setUpEventListeners();
+    books.getBestSellersListData(bestSellersListUrl);
   };
 
   books.init();
+
   return books;
 })();

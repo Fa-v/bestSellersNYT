@@ -11,6 +11,12 @@ body {
   background: #15414c;
 }
 
+.header {
+  color: #fff;
+  padding: 2em;
+  border-bottom: 1px solid #23aad1;
+}
+
 .container {
   display: flex;
   flex-wrap: wrap;
@@ -18,10 +24,9 @@ body {
   margin: 1em;
 }
 
-.mainTitle {
-  color: #fff;
-  padding: 1em;
-  border-bottom: 1px solid #23aad1;
+.subtitle {
+  display: inherit;
+  margin-bottom: 0.5em;
 }
 
 .card {
@@ -81,6 +86,16 @@ body {
 .linkBtn:hover {
   background: #fff;
   color: #ff6f00;
+}
+
+.backBtn {
+  text-align: center;
+  font-weight: 700;
+  background: #23aad1;
+  color: #fff;
+  padding: 8px;
+  align-self: flex-end;
+  border: none;
 }
 
 @media screen and (min-width: 780px) {
