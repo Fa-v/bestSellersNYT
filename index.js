@@ -13,7 +13,6 @@
   const footer = document.querySelector('.footer');
   const goBackBtn = document.createElement('button');
   const listName = document.createElement('h2');
-  const localData = sessionStorage.getItem('booksData');
 
   /**
    * getBestSellersListData - Fetches a list of best sellers from the NYT API.
@@ -23,16 +22,17 @@
    * @returns {void}
    */
   books.getBestSellersListData = function(url) {
+    const listsLocalData = sessionStorage.getItem('booksListData');
+    if (listsLocalData) {
+      books.renderLists(JSON.parse(listsLocalData));
+      return;
+    }
     books.showLoading();
-
     fetch(url)
       .then(response => response.json())
       .then(data => {
         const { results: booksListData } = data;
-        /* sessionStorage.setItem(
-            'booksListData',
-            JSON.stringify(booksListData)
-          ); */
+        sessionStorage.setItem('booksListData', JSON.stringify(booksListData));
         books.renderLists(booksListData);
       })
       .catch(error => books.handleError(error));
@@ -45,14 +45,21 @@
    * @this books
    * @returns {void}
    */
-  books.getListDetail = function(url) {
-    books.showLoading();
+  books.getListDetail = function(url, selectedList) {
+    const detailLocalData = sessionStorage.getItem(selectedList);
 
+    if (detailLocalData) {
+      books.renderBestSellers(JSON.parse(detailLocalData));
+      return;
+    }
+
+    books.showLoading();
     fetch(url)
       .then(response => response.json())
       .then(data => {
         const { results: booksData } = data;
-        /* sessionStorage.setItem('booksData', JSON.stringify(booksData)); */
+        const detailId = booksData.list_name_encoded;
+        sessionStorage.setItem(`${detailId}`, JSON.stringify(booksData));
         books.renderBestSellers(booksData);
       })
       .catch(error => books.handleError(error));
@@ -78,18 +85,6 @@
   };
 
   /**
-   * Parses data from session storage
-   * @param {Object} books list of best seller
-   * @this books
-   * @returns {Void}
-   */
-  /*  books.getLocalData = function(booksData) {
-    spinner.removeAttribute('class');
-    let parsedData = JSON.parse(booksData);
-    books.handleResponse(parsedData);
-  }; */
-
-  /**
    * Extracts the necessary values to be painted in the DOM
    * @param {Object} list list of best seller
    * @this books
@@ -99,6 +94,7 @@
     books.removeLoading();
     goBackBtn.style.display = 'none';
     listName.style.display = 'none';
+    container.innerHTML = '';
 
     booksListData.map(function(list) {
       const card = document.createElement('div');
@@ -129,6 +125,7 @@
    */
   books.renderBestSellers = function(booksData) {
     books.removeLoading();
+    container.innerHTML = '';
 
     listName.setAttribute('class', 'subtitle');
     listName.style.display = 'block';
@@ -162,8 +159,7 @@
     goBackBtn.setAttribute('class', 'backBtn');
     goBackBtn.innerText = 'Back to lists';
     goBackBtn.style.display = 'none';
-
-    header.append(goBackBtn);
+    header.insertAdjacentElement('afterend', goBackBtn);
   };
 
   /**
@@ -201,7 +197,7 @@
       if (selectedDiv && selectedList) {
         const listUrl = `current/${selectedList}.json?api-key=${API_KEY}`;
         const composedUrl = `${baseUrl}${listUrl}`;
-        books.getListDetail(composedUrl);
+        books.getListDetail(composedUrl, selectedList);
       }
     };
 

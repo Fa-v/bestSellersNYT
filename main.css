@@ -96,6 +96,7 @@ body {
   padding: 8px;
   align-self: flex-end;
   border: none;
+  margin: 2em;
 }
 
 @media screen and (min-width: 780px) {
