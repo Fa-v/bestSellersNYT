@@ -5,6 +5,7 @@
    */
   const books = {};
   const baseUrl = `https://api.nytimes.com/svc/books/v3/lists/`;
+  const API_KEY = '';
   const lists = `names.json?api-key=${API_KEY}`;
   const bestSellersListUrl = `${baseUrl}${lists}`;
   const header = document.querySelector('.header');
@@ -42,6 +43,7 @@
    * getListDetail - Fetches the list detail for the selected category.
    * In the first request, it sets the data in session storage
    * @param {String} url from the NYT
+   * @param {Object} selectedList the list the user has clicked
    * @this books
    * @returns {void}
    */
@@ -155,6 +157,11 @@
     });
   };
 
+  /**
+   * Creates the back button element in the DOM but doesn't shows it yet.
+   * @this books
+   * @returns {Void}
+   */
   books.setUpBackButton = function() {
     goBackBtn.setAttribute('class', 'backBtn');
     goBackBtn.innerText = 'Back to lists';
@@ -163,10 +170,8 @@
   };
 
   /**
-   * Shows an animation until the ajax request is completed and checks if data has been set locally
-   * @callback books.getBookList
-   * @callback books.getLocalData
-   * @param {String} books list of best seller
+   * Shows an animation until the ajax request is completed and checks if data
+   * has been set locally
    * @this books
    * @returns {Void}
    */
@@ -176,11 +181,21 @@
     container.innerHTML = '';
   };
 
+  /**
+   * Hides loading animation
+   * @this books
+   * @returns {Void}
+   */
   books.removeLoading = function() {
     spinner.removeAttribute('class');
     footer.style.display = 'flex';
   };
 
+  /**
+   * Adds a click event to go back to the initial page
+   * @this books
+   * @returns {Void}
+   */
   books.createGoBackButtonEventListener = function() {
     const onClickGoBackBtn = function() {
       books.getBestSellersListData(bestSellersListUrl);
@@ -189,6 +204,11 @@
     goBackBtn.addEventListener('click', onClickGoBackBtn);
   };
 
+  /**
+   * Adds a click event to get the detail from a specific best sellers' list
+   * @this books
+   * @returns {Void}
+   */
   books.createListDetailEventListener = function() {
     const onClickDetail = function(event) {
       const selectedList = event.target.dataset.id;
@@ -204,11 +224,21 @@
     container.addEventListener('click', onClickDetail);
   };
 
+  /**
+   * Sets up on buttons when the page is loaded
+   * @this books
+   * @returns {Void}
+   */
   books.setUpEventListeners = function() {
     books.createGoBackButtonEventListener();
     books.createListDetailEventListener();
   };
 
+  /**
+   * Initialize the app setting the events and fetching the best sellers' lists
+   * @this books
+   * @returns {Void}
+   */
   books.init = function() {
     books.setUpBackButton();
     books.setUpEventListeners();
